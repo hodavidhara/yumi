@@ -1,4 +1,4 @@
 yumi
 ====
 
-Node wrapper for the bamboo REST API
+Send commands to bamboo from Hipchat
