@@ -1,7 +1,7 @@
 var request = require('request');
 
 var Bamboo = function (domain) {
-  if (domain.lastIndexOf('http://', 0) === 0) {
+  if (domain.lastIndexOf('https://', 0) === 0) {
     this.domain = domain;
   } else {
     this.domain = 'https://' + domain;

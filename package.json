@@ -1,5 +1,12 @@
 {
+  "name": "yumi",
+  "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hodavidhara/yumi.git"
+  },
   "dependencies": {
-    "request": "2.27.0"
+    "request": "2.27.0",
+    "node-hipchat": "0.2.0"
   }
 }

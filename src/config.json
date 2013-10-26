@@ -1,5 +1,6 @@
 {
   "domain": "",
   "username": "",
-  "password": ""
+  "password": "",
+  "hipchatApiKey": ""
 }
