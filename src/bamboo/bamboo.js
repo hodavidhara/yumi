@@ -9,8 +9,8 @@ var Bamboo = function (domain) {
 }
 
 Bamboo.prototype.authenticate = function(username, password, callback) {
-  var loginUrl = this.domain + '/rest/api/latest/plan?os_authType=basic&os_username=' + username + '&os_password=' + password;
 
+  var loginUrl = this.domain + '/rest/api/latest/plan?os_authType=basic&os_username=' + username + '&os_password=' + password;
   request.get(loginUrl, function(error, response, body) {
     if (error) {
       console.error("Authentication Failed with request :" + loginUrl);
@@ -34,6 +34,8 @@ Bamboo.prototype.getPlans = function(callback) {
     if (error) {
       console.error("Error getting plans.");
       console.error("Error");
+    } else if (response.statusCode === 401) {
+      console.log("Not authenticated");
     }
 
     var parsedBody = JSON.parse(body);
@@ -44,6 +46,48 @@ Bamboo.prototype.getPlans = function(callback) {
 
     if (callback) {
       callback(planMap);
+    }
+  }).auth(this.username, this.password);
+}
+
+Bamboo.prototype.getPlan = function(projectKey, buildKey, callback) {
+
+  var planUri = this.domain + '/rest/api/latest/plan/' + projectKey + '-' + buildKey + '.json';
+
+  console.log(planUri);
+  request.get(planUri, function(error, response, body) {
+    if (error) {
+      console.error("Error getting plans.");
+      console.error("Error");
+    } else if (response.statusCode === 401) {
+      console.log("Not authenticated");
+    }
+
+    var parsedBody = JSON.parse(body);
+
+    if (callback) {
+      callback(parsedBody);
+    }
+  }).auth(this.username, this.password);
+}
+
+Bamboo.prototype.getResult = function(projectKey, buildKey, callback) {
+
+  var planUri = this.domain + '/rest/api/latest/result/' + projectKey + '-' + buildKey + '.json';
+
+  console.log(planUri);
+  request.get(planUri, function(error, response, body) {
+    if (error) {
+      console.error("Error getting plans.");
+      console.error("Error");
+    } else if (response.statusCode === 401) {
+      console.log("Not authenticated");
+    }
+
+    var parsedBody = JSON.parse(body);
+
+    if (callback) {
+      callback(parsedBody.results);
     }
   }).auth(this.username, this.password);
 }
