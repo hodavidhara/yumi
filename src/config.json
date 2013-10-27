@@ -1,6 +1,12 @@
 {
-  "domain": "",
-  "username": "",
-  "password": "",
-  "hipchatApiKey": ""
+  "bamboo" : {
+    "domain": "",
+    "username": "",
+    "password": "",
+    "project": ""
+  },
+  "hipchat": {
+    "apiKey": "",
+    "room": ""
+  }
 }
