@@ -37,23 +37,32 @@ Bamboo.prototype.authenticate = function(username, password, callback) {
 /**
  * Get all plans from bamboo.
  *
- * TODO: figure out a better error handling system.
  * @param callback
  */
-Bamboo.prototype.getPlans = function(callback) {
+Bamboo.prototype.getPlans = function(successCallback, errorCallback) {
 
   var uri = this.domain + '/rest/api/latest/plan.json'
   request.get(uri, function(error, response, body) {
     if (error) {
       console.error('Error getting plans.');
-      console.error('Error');
+      if (errorCallback) {
+        errorCallback(error);
+      }
     } else if (response.statusCode === 401) {
       console.log('Not authenticated');
+      var response = {
+        message: "No bamboo user authenticated."
+      }
+      if (errorCallback) {
+        errorCallback(response);
+      }
     }
 
-    var parsedBody = JSON.parse(body);
-    if (callback) {
-      callback(parsedBody.plans.plan);
+    if (successCallback) {
+      var parsedBody = JSON.parse(body);
+      if (successCallback) {
+        successCallback(parsedBody);
+      }
     }
   }).auth(this.username, this.password);
 }
@@ -92,7 +101,6 @@ Bamboo.prototype.getPlan = function(planKey, callback) {
   request.get(uri, function(error, response, body) {
     if (error) {
       console.error('Error getting plans.');
-      console.error('Error');
     } else if (response.statusCode === 401) {
       console.log('Not authenticated');
     }
@@ -121,7 +129,6 @@ Bamboo.prototype.getResult = function(planKey, callback) {
   request.get(uri, function(error, response, body) {
     if (error) {
       console.error('Error getting plans.');
-      console.error('Error');
     } else if (response.statusCode === 401) {
       console.log('Not authenticated');
     }
@@ -147,7 +154,6 @@ Bamboo.prototype.queueBuild = function(planKey, callback) {
   request.post(uri, function(error, response, body) {
     if (error) {
       console.error('Error getting plans.');
-      console.error('Error');
     } else if (response.statusCode === 401) {
       console.log('Not authenticated');
     }
