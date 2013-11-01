@@ -2,6 +2,7 @@ var Bamboo = require('./bamboo/bamboo.js'),
     HipchatClient = require('node-hipchat'),
     moment = require('moment'),
     config = require('./config.json');
+    StringUtil = require('./util/StringUtil.js')
 
 console.log('Starting yumi with config:' + JSON.stringify(config));
 
@@ -99,7 +100,7 @@ var getMostRecentDateFromMessages = function(messages) {
  */
 var searchUnreadMessagesForCommand = function(unreadMessages) {
   unreadMessages.forEach(function(message) {
-    if (message.message.lastIndexOf(YUMI_KEYWORD, 0) === 0) {
+    if (StringUtil.startsWith(message.message, YUMI_KEYWORD)) {
       if (message.message === YUMI_KEYWORD + ' show plans') {
         bamboo.getPlansForProject(config.bamboo.project, function(plans) {
           var messageString = '<ul>';
@@ -119,7 +120,7 @@ var searchUnreadMessagesForCommand = function(unreadMessages) {
             console.log(response);
           });
         });
-      } else if (message.message.lastIndexOf(YUMI_KEYWORD + ' run plan', 0) === 0) {
+      } else if (StringUtil.startsWith(message.message, YUMI_KEYWORD + ' run plan')) {
         var tokens = message.message.split(' ');
         var planKey = tokens[3];
 
