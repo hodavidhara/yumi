@@ -20,7 +20,9 @@ var Bamboo = function (domain) {
  */
 Bamboo.prototype.authenticate = function(username, password, callback) {
 
+  var bamboo = this;
   var uri = this.domain + '/rest/api/latest/plan?os_authType=basic&os_username=' + username + '&os_password=' + password;
+
   request.get(uri, function(error, response, body) {
     if (error) {
       console.error('Authentication Failed');
@@ -31,8 +33,9 @@ Bamboo.prototype.authenticate = function(username, password, callback) {
       callback(null, false)
     }
 
-    this.username = username;
-    this.password = password;
+    bamboo.username = username;
+    bamboo.password = password;
+
     callback(null, true);
   });
 }
@@ -45,6 +48,7 @@ Bamboo.prototype.authenticate = function(username, password, callback) {
 Bamboo.prototype.getPlans = function(callback) {
 
   var uri = this.domain + '/rest/api/latest/plan.json'
+
   request.get(uri, function(error, response, body) {
     _handleErrors(error, response, callback);
 
@@ -88,7 +92,6 @@ Bamboo.prototype.getPlan = function(planKey, callback) {
 
   var uri = this.domain + '/rest/api/latest/plan/' + planKey + '.json';
 
-  console.log(uri);
   request.get(uri, function(error, response, body) {
     _handleErrors(error, response, callback);
 
@@ -112,7 +115,6 @@ Bamboo.prototype.getResult = function(planKey, callback) {
 
   var uri = this.domain + '/rest/api/latest/result/' + planKey + '.json';
 
-  console.log(uri);
   request.get(uri, function(error, response, body) {
     _handleErrors(error, response, callback);
 
@@ -131,16 +133,16 @@ Bamboo.prototype.getResult = function(planKey, callback) {
  * @param callback
  */
 Bamboo.prototype.queueBuild = function(planKey, callback) {
+
   var uri = this.domain + '/rest/api/latest/queue/' + planKey + '.json';
 
-  console.log(uri);
   request.post(uri, function(error, response, body) {
     _handleErrors(error, response, callback);
 
-    var parsedBody = JSON.parse(body);
+    var queueResult = JSON.parse(body);
 
     if (callback) {
-      callback(parsedBody);
+      callback(null, queueResult);
     }
   }).auth(this.username, this.password);
 }

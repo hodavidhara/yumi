@@ -15,10 +15,17 @@ var YUMI_KEYWORD = '!yumi';
 
 var startYumi = function() {
   console.log("Authenticating...");
+
   // Authenticate bamboo and start polling.
   bamboo.authenticate(config.bamboo.username, config.bamboo.password, function(error, isAuthenticated) {
+
+    if (error) {
+      console.log(error);
+      return;
+    }
+
     if (isAuthenticated) {
-      console.log("beginning polling for messages");
+      console.log("Authenticated!");
       poll();
     }
   });
@@ -101,6 +108,9 @@ var getMostRecentDateFromMessages = function(messages) {
  * @param {Array} unreadMessages The list of unread messages.
  */
 var searchUnreadMessagesForCommand = function(unreadMessages) {
+
+  console.log("Searching messages for commands: " + JSON.stringify(unreadMessages));
+
   unreadMessages.forEach(function(message) {
     if (StringUtil.startsWith(message.message, YUMI_KEYWORD)) {
       if (message.message === YUMI_KEYWORD + ' show plans') {
