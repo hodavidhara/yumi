@@ -1,8 +1,8 @@
 var Bamboo = require('./bamboo/bamboo.js'),
     HipchatClient = require('node-hipchat'),
     moment = require('moment'),
-    config = require('./config.json');
-    StringUtil = require('./util/StringUtil.js')
+    config = require('./config.json'),
+    StringUtil = require('./util/StringUtil.js');
 
 console.log('Starting yumi with config:' + JSON.stringify(config));
 
@@ -14,9 +14,11 @@ var bamboo = new Bamboo(config.bamboo.domain),
 var YUMI_KEYWORD = '!yumi';
 
 var startYumi = function() {
+  console.log("Authenticating...");
   // Authenticate bamboo and start polling.
-  bamboo.authenticate(config.bamboo.username, config.bamboo.password, function(isAuthenticated) {
+  bamboo.authenticate(config.bamboo.username, config.bamboo.password, function(error, isAuthenticated) {
     if (isAuthenticated) {
+      console.log("beginning polling for messages");
       poll();
     }
   });
@@ -102,7 +104,14 @@ var searchUnreadMessagesForCommand = function(unreadMessages) {
   unreadMessages.forEach(function(message) {
     if (StringUtil.startsWith(message.message, YUMI_KEYWORD)) {
       if (message.message === YUMI_KEYWORD + ' show plans') {
-        bamboo.getPlansForProject(config.bamboo.project, function(plans) {
+
+        bamboo.getPlansForProject(config.bamboo.project, function(error, plans) {
+
+          if (error) {
+            console.log(error);
+            return;
+          }
+
           var messageString = '<ul>';
           plans.forEach(function(plan) {
             messageString = messageString + '<li>' + plan.name + ' (' + plan.key + ')</li>';
@@ -124,7 +133,13 @@ var searchUnreadMessagesForCommand = function(unreadMessages) {
         var tokens = message.message.split(' ');
         var planKey = tokens[3];
 
-        bamboo.queueBuild(planKey, function(response) {
+        bamboo.queueBuild(planKey, function(error, response) {
+
+          if (error) {
+            console.log(error);
+            return;
+          }
+
           var resultUrl = 'https://' + config.bamboo.domain + '/browse/' + response.buildResultKey;
           var messageString = 'Queuing build for plan ' + planKey + '. <a href=' + resultUrl + '>View status.</a>';
           var params = {

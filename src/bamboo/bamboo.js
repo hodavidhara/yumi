@@ -1,5 +1,5 @@
 var request = require('request'),
-    StringUtil = require('../util/StringUtil.js')
+    StringUtil = require('../util/StringUtil.js');
 
 var Bamboo = function (domain) {
   this.username = null;
