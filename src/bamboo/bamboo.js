@@ -109,6 +109,21 @@ Bamboo.prototype.getPlan = function(planKey, callback) {
   }).auth(this.username, this.password);
 }
 
+Bamboo.prototype.getBranchesForPlan = function(planKey, callback) {
+
+  var uri = this.domain + '/rest/api/latest/plan/' + planKey + '/branch.json';
+
+  request.get(uri, function(error, response, body) {
+    _handleErrors(error, response, callback);
+
+    var parsedBody = JSON.parse(body);
+
+    if (callback) {
+      callback(null, parsedBody.branches.branch);
+    }
+  }).auth(this.username, this.password);
+}
+
 /**
  * Get a result of a plan.
  *

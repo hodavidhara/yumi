@@ -164,6 +164,36 @@ var searchUnreadMessagesForCommand = function(unreadMessages) {
             console.log(response);
           });
         });
+      } else if (StringUtil.startsWith(message.message, YUMI_KEYWORD + ' show branches')) {
+        var tokens = message.message.split(' ');
+        var planKey = tokens[3];
+
+        bamboo.getBranchesForPlan(planKey, function(error, branches) {
+
+          if (error) {
+            console.log(error);
+            return;
+          }
+
+          var messageString = '<ul>';
+          branches.forEach(function(branch) {
+            messageString = messageString + '<li>' + branch.shortName + ' (' + branch.key + ')</li>';
+          });
+          messageString = messageString + '</ul>';
+          var params = {
+            room: config.hipchat.room,
+            from: 'Yumi',
+            message: messageString,
+            notify: false,
+            color: 'green',
+            message_format: 'html'
+          }
+          console.log(messageString);
+          hipchat.postMessage(params, function(response) {
+            console.log(response);
+          });
+
+        });
       }
     }
   });
