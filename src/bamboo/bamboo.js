@@ -72,7 +72,7 @@ Bamboo.prototype.getPlansForProject = function(projectKey, callback) {
     }
     var projectPlans = [];
     allPlans.forEach(function(plan) {
-      if (StringUtil.startsWIth(plan.key, projectKey)) {
+      if (StringUtil.startsWith(plan.key, projectKey)) {
         projectPlans.push(plan);
       }
     });
