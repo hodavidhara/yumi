@@ -54,7 +54,7 @@ Bamboo.prototype.getPlans = function(callback) {
 
     if (callback) {
       var parsedBody = JSON.parse(body);
-      callback(null, parsedBody);
+      callback(null, parsedBody.plans.plan);
     }
   }).auth(this.username, this.password);
 }
