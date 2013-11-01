@@ -21,7 +21,7 @@ var Bamboo = function (domain) {
 Bamboo.prototype.authenticate = function(username, password, callback) {
 
   var bamboo = this;
-  var uri = this.domain + '/rest/api/latest/plan?os_authType=basic&os_username=' + username + '&os_password=' + password;
+  var uri = this.domain + '/rest/api/latest/plan.json?os_authType=basic&os_username=' + username + '&os_password=' + password;
 
   request.get(uri, function(error, response, body) {
     if (error) {
@@ -47,7 +47,8 @@ Bamboo.prototype.authenticate = function(username, password, callback) {
  */
 Bamboo.prototype.getPlans = function(callback) {
 
-  var uri = this.domain + '/rest/api/latest/plan.json'
+  // TODO: pick a better strategy for getting all the plans.
+  var uri = this.domain + '/rest/api/latest/plan.json?max-result=50';
 
   request.get(uri, function(error, response, body) {
     _handleErrors(error, response, callback);
@@ -66,16 +67,21 @@ Bamboo.prototype.getPlans = function(callback) {
  * @param callback
  */
 Bamboo.prototype.getPlansForProject = function(projectKey, callback) {
+
   this.getPlans(function(error, allPlans) {
+
     if (error) {
       callback(error);
     }
+
     var projectPlans = [];
+
     allPlans.forEach(function(plan) {
       if (StringUtil.startsWith(plan.key, projectKey)) {
         projectPlans.push(plan);
       }
     });
+
     if (callback) {
       callback(null, projectPlans);
     }
