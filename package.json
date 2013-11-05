@@ -5,9 +5,15 @@
     "type": "git",
     "url": "https://github.com/hodavidhara/yumi.git"
   },
+  "author" : {
+    "name": "David Hara",
+    "email": "hakuhen@gmail.com"
+  },
   "dependencies": {
     "request": "2.27.0",
     "moment": "2.3.1",
-    "node-hipchat": "0.2.0"
+    "node-hipchat": "0.2.0",
+    "nano": "4.1.4",
+    "q": "0.9.7"
   }
 }

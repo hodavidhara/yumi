@@ -2,32 +2,41 @@ var Bamboo = require('./bamboo/bamboo.js'),
     HipchatClient = require('node-hipchat'),
     moment = require('moment'),
     config = require('./config.json'),
-    StringUtil = require('./util/StringUtil.js');
+    StringUtil = require('./util/StringUtil.js'),
+    yumiDbHelper = require('./db/yumi-db.js');
 
 console.log('Starting yumi with config:' + JSON.stringify(config));
 
 // TODO: Checks for required config.
 
 var bamboo = new Bamboo(config.bamboo.domain),
-    hipchat = new HipchatClient(config.hipchat.apiKey);
+    hipchat = new HipchatClient(config.hipchat.apiKey),
+    yumiDb = null;
 
 var YUMI_KEYWORD = '!yumi';
 
 var startYumi = function() {
-  console.log("Authenticating...");
-
-  // Authenticate bamboo and start polling.
-  bamboo.authenticate(config.bamboo.username, config.bamboo.password, function(error, isAuthenticated) {
-
-    if (error) {
-      console.log(error);
+  yumiDbHelper.get().then(function(db) {
+    yumiDb = db;
+    if (!yumiDb) {
+      console.log("No db found.");
       return;
     }
+    console.log('Authenticating...');
 
-    if (isAuthenticated) {
-      console.log("Authenticated!");
-      poll();
-    }
+    // Authenticate bamboo and start polling.
+    bamboo.authenticate(config.bamboo.username, config.bamboo.password, function(error, isAuthenticated) {
+
+      if (error) {
+        console.log(error);
+        return;
+      }
+
+      if (isAuthenticated) {
+        console.log('Authenticated!');
+        poll();
+      }
+    });
   });
 }
 
@@ -193,6 +202,36 @@ var searchUnreadMessagesForCommand = function(unreadMessages) {
             console.log(response);
           });
 
+        });
+      } else if (StringUtil.startsWith(message.message, YUMI_KEYWORD + ' alias')) {
+        var tokens = message.message.split(' ');
+        var planKey = tokens[2];
+        var planAlias = tokens[3];
+        var user = message.from;
+
+        var alias = {
+          type: 'alias',
+          planKey: planKey,
+          alias: planAlias,
+          user: user
+        }
+
+        yumiDb.insert(alias, {}, function(error) {
+          if (error) {
+            throw error;
+          }
+          var messageString = 'Aliased ' + planKey + ' to ' + planAlias + ' for ' + user.name;
+          var params = {
+            room: config.hipchat.room,
+            from: 'Yumi',
+            message: messageString,
+            notify: false,
+            color: 'green',
+            message_format: 'html'
+          }
+          hipchat.postMessage(params, function(response) {
+            console.log(response);
+          });
         });
       }
     }
