@@ -4,9 +4,10 @@ var request = require('request'),
 var Bamboo = function (domain) {
   this.username = null;
   this.password = null;
-  if (domain.lastIndexOf('https://', 0) === 0) {
+  if (StringUtil.startsWith(domain, 'http://') || StringUtil.startsWith('https://')) {
     this.domain = domain;
   } else {
+    // TODO: how do we decide whether or not to use http or https?
     this.domain = 'https://' + domain;
   }
 }
