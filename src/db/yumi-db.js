@@ -1,4 +1,4 @@
-var nano = require('nano')('http://localhost:5984/'),
+var nano = require('nano')('http://yumi.iriscouch.com/'),
     q = require('q');
 
 var yumiDbName = 'yumi';
