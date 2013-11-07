@@ -16,12 +16,14 @@ var bamboo = new Bamboo(config.bamboo.domain),
 var YUMI_KEYWORD = '!yumi';
 
 var startYumi = function() {
+  console.log("Getting db...");
   yumiDbHelper.get().then(function(db) {
     yumiDb = db;
     if (!yumiDb) {
       console.log("No db found.");
       return;
     }
+    console.log('db found!');
     console.log('Authenticating...');
 
     // Authenticate bamboo and start polling.
