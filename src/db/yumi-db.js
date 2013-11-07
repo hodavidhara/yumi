@@ -1,11 +1,14 @@
-var nano = require('nano')('http://yumi.iriscouch.com/'),
+var nano = require('nano')('http://127.0.0.1:5984/'),
     q = require('q');
 
 var yumiDbName = 'yumi';
 var views = {
   alias: {
-    "map" : "function(doc) {" +
-      "emit(doc.user.user_id, doc);" +
+    "map" :
+      "function(doc) {" +
+        "if(doc.type === 'alias') {" +
+          "emit(doc.user.user_id, doc);" +
+        "}" +
       "}"
   }
 }

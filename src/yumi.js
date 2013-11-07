@@ -152,28 +152,46 @@ var searchUnreadMessagesForCommand = function(unreadMessages) {
         });
       } else if (StringUtil.startsWith(message.message, YUMI_KEYWORD + ' run plan')) {
         var tokens = message.message.split(' ');
-        var planKey = tokens[3];
+        var userInput = tokens[3];
+        var planKey = null;
+        var user = message.from;
 
-        bamboo.queueBuild(planKey, function(error, response) {
-
-          if (error) {
-            console.log(error);
-            return;
-          }
-
-          var resultUrl = 'https://' + config.bamboo.domain + '/browse/' + response.buildResultKey;
-          var messageString = 'Queuing build for plan ' + planKey + '. <a href=' + resultUrl + '>View status.</a>';
-          var params = {
-            room: config.hipchat.room,
-            from: 'Yumi',
-            message: messageString,
-            notify: false,
-            color: 'green',
-            message_format: 'html'
-          }
-          hipchat.postMessage(params, function(response) {
-            console.log(response);
+        // See if it's an alias
+        // TODO: we could create a better view so that we don't have to loop through results.
+        yumiDb.view('yumi', 'alias', {key: user.user_id}, function(error, body) {
+          body.rows.forEach(function(row) {
+            if (row.value.alias === userInput) {
+              planKey = row.value.planKey;
+            }
           });
+
+          // If no plan key set yet, assume it's not an alias.
+          if (!planKey) {
+            planKey = userInput;
+          }
+
+          bamboo.queueBuild(planKey, function(error, response) {
+
+            if (error) {
+              console.log(error);
+              return;
+            }
+
+            var resultUrl = 'https://' + config.bamboo.domain + '/browse/' + response.buildResultKey;
+            var messageString = 'Queuing build for plan ' + planKey + '. <a href=' + resultUrl + '>View status.</a>';
+            var params = {
+              room: config.hipchat.room,
+              from: 'Yumi',
+              message: messageString,
+              notify: false,
+              color: 'green',
+              message_format: 'html'
+            }
+            hipchat.postMessage(params, function(response) {
+              console.log(response);
+            });
+          });
+
         });
       } else if (StringUtil.startsWith(message.message, YUMI_KEYWORD + ' show branches')) {
         var tokens = message.message.split(' ');
@@ -211,18 +229,48 @@ var searchUnreadMessagesForCommand = function(unreadMessages) {
         var planAlias = tokens[3];
         var user = message.from;
 
-        var alias = {
-          type: 'alias',
-          planKey: planKey,
-          alias: planAlias,
-          user: user
-        }
+        if (planKey && planAlias) {
+          var alias = {
+            type: 'alias',
+            planKey: planKey,
+            alias: planAlias,
+            user: user
+          }
 
-        yumiDb.insert(alias, {}, function(error) {
+          yumiDb.insert(alias, {}, function(error) {
+            if (error) {
+              throw error;
+            }
+            var messageString = 'Aliased ' + planKey + ' to ' + planAlias + ' for ' + user.name;
+            var params = {
+              room: config.hipchat.room,
+              from: 'Yumi',
+              message: messageString,
+              notify: false,
+              color: 'green',
+              message_format: 'html'
+            }
+            hipchat.postMessage(params, function(response) {
+              console.log(response);
+            });
+          });
+        }
+      } else if (StringUtil.startsWith(message.message, YUMI_KEYWORD + ' show aliases')) {
+        var user = message.from;
+
+        yumiDb.view('yumi', 'alias', {key: user.user_id}, function(error, body) {
+
           if (error) {
             throw error;
           }
-          var messageString = 'Aliased ' + planKey + ' to ' + planAlias + ' for ' + user.name;
+
+          console.log(body);
+
+          var messageString = '<ul>';
+          body.rows.forEach(function(row) {
+            messageString = messageString + '<li>' + row.value.alias + ' -> ' + row.value.planKey + '</li>'
+          })
+          messageString = messageString + '</ul>';
           var params = {
             room: config.hipchat.room,
             from: 'Yumi',
@@ -231,10 +279,12 @@ var searchUnreadMessagesForCommand = function(unreadMessages) {
             color: 'green',
             message_format: 'html'
           }
+          console.log(messageString);
           hipchat.postMessage(params, function(response) {
             console.log(response);
           });
-        });
+        })
+
       }
     }
   });

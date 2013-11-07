@@ -170,7 +170,6 @@ Bamboo.prototype.queueBuild = function(planKey, callback) {
 
 var _handleErrors = function(error, response, callback) {
   if (error) {
-    console.error('Error getting plans.');
     if (callback) {
       callback(error);
     }
