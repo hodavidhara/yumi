@@ -7,8 +7,7 @@ var Bamboo = function (domain) {
   if (StringUtil.startsWith(domain, 'http://') || StringUtil.startsWith('https://')) {
     this.domain = domain;
   } else {
-    // TODO: how do we decide whether or not to use http or https?
-    this.domain = 'https://' + domain;
+    this.domain = '//' + domain;
   }
 }
 
