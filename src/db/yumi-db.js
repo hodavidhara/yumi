@@ -1,4 +1,5 @@
-var nano = require('nano')('http://127.0.0.1:5984/'),
+var config = require('../config.json'),
+    nano = require('nano')('http://' + config.yumi.dbUrl),
     q = require('q');
 
 var yumiDbName = 'yumi';
@@ -59,7 +60,7 @@ var createViewsIfNecessary = function(db) {
       var designDoc = body;
       for (var key in views) {
         if (designDoc.views[key]) {
-          if (designDoc.views[key] !== views[key]) {
+          if (JSON.stringify(designDoc.views[key]) !== JSON.stringify(views[key])) {
             console.log('Updating view: ' + key);
             designDoc.views[key] = views[key];
           }

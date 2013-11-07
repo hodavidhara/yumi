@@ -1,5 +1,8 @@
 {
-  "bamboo" : {
+  "yumi": {
+    "dbUrl": ""
+  },
+  "bamboo": {
     "domain": "",
     "username": "",
     "password": "",
