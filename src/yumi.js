@@ -3,48 +3,38 @@ var Bamboo = require('./bamboo/bamboo.js'),
     moment = require('moment'),
     config = require('./config.json'),
     StringUtil = require('./util/StringUtil.js'),
-    yumiDbHelper = require('./db/yumi-db.js');
+    AliasService = require('./db/AliasService.js');
 
 console.log('Starting yumi with config:' + JSON.stringify(config));
 
 // TODO: Checks for required config.
 
 var bamboo = new Bamboo(config.bamboo.domain),
-    hipchat = new HipchatClient(config.hipchat.apiKey),
-    yumiDb = null;
+    hipchat = new HipchatClient(config.hipchat.apiKey);
 
 var YUMI_KEYWORD = '!yumi';
 
 var startYumi = function() {
-    console.log("Getting db...");
-    yumiDbHelper.get().then(function(db) {
-        yumiDb = db;
-        if (!yumiDb) {
-            console.log("No db found.");
+    console.log('Authenticating...');
+
+    // Authenticate bamboo and start polling.
+    bamboo.authenticate(config.bamboo.username, config.bamboo.password, function(error, isAuthenticated) {
+
+        if (error) {
+            console.log(error);
             return;
         }
-        console.log('db found!');
-        console.log('Authenticating...');
 
-        // Authenticate bamboo and start polling.
-        bamboo.authenticate(config.bamboo.username, config.bamboo.password, function(error, isAuthenticated) {
-
-            if (error) {
-                console.log(error);
-                return;
-            }
-
-            if (isAuthenticated) {
-                console.log('Authenticated!');
-                poll();
-            }
-        });
+        if (isAuthenticated) {
+            console.log('Authenticated!');
+            poll();
+        }
     });
 }
 
 /**
  * Poll for messages and execute commands
- * 
+ *
  * @param fromDate a moment.js date object.
  */
 var poll = function(fromDate) {
@@ -67,7 +57,7 @@ var poll = function(fromDate) {
 
 /**
  * Gets all messages from the given list that happened after the given date.
- * 
+ *
  * @param {Array} messages The list of all messages.
  * @param lastDate A moment.js date that we want messages after.
  * @returns {Array} The list of 'unread' messages.
@@ -156,45 +146,10 @@ var searchUnreadMessagesForCommand = function(unreadMessages) {
                 var planKey = null;
                 var user = message.from;
 
-                // See if it's an alias
-                // TODO: we could create a better view so that we don't have to loop through results.
-                yumiDb.view('yumi', 'alias', {
-                    key: user.user_id
-                }, function(error, body) {
-                    body.rows.forEach(function(row) {
-                        if (row.value.alias === userInput) {
-                            planKey = row.value.planKey;
-                        }
-                    });
 
-                    // If no plan key set yet, assume it's not an alias.
-                    if (!planKey) {
-                        planKey = userInput;
-                    }
-
-                    bamboo.queueBuild(planKey, function(error, response) {
-
-                        if (error) {
-                            console.log(error);
-                            return;
-                        }
-
-                        var resultUrl = 'https://' + config.bamboo.domain + '/browse/' + response.buildResultKey;
-                        var messageString = 'Queuing build for plan ' + planKey + '. <a href=' + resultUrl + '>View status.</a>';
-                        var params = {
-                            room: config.hipchat.room,
-                            from: 'Yumi',
-                            message: messageString,
-                            notify: false,
-                            color: 'green',
-                            message_format: 'html'
-                        }
-                        hipchat.postMessage(params, function(response) {
-                            console.log(response);
-                        });
-                    });
-
-                });
+                AliasService.getPlanKeyForAlias(user, userInput)
+                    .then(queueBuildAndSendHipchatMessage)
+                    .fail(queueBuildAndSendHipchatMessage(userInput));
             } else if (StringUtil.startsWith(message.message, YUMI_KEYWORD + ' show branches')) {
                 var tokens = message.message.split(' ');
                 var planKey = tokens[3];
@@ -228,21 +183,12 @@ var searchUnreadMessagesForCommand = function(unreadMessages) {
             } else if (StringUtil.startsWith(message.message, YUMI_KEYWORD + ' alias')) {
                 var tokens = message.message.split(' ');
                 var planKey = tokens[2];
-                var planAlias = tokens[3];
+                var aliasKey = tokens[3];
                 var user = message.from;
 
-                if (planKey && planAlias) {
-                    var alias = {
-                        type: 'alias',
-                        planKey: planKey,
-                        alias: planAlias,
-                        user: user
-                    }
+                if (planKey && aliasKey) {
 
-                    yumiDb.insert(alias, {}, function(error) {
-                        if (error) {
-                            throw error;
-                        }
+                    AliasService.createAlias(user, planKey, aliasKey).then(function() {
                         var messageString = 'Aliased ' + planKey + ' to ' + planAlias + ' for ' + user.name;
                         var params = {
                             room: config.hipchat.room,
@@ -260,16 +206,7 @@ var searchUnreadMessagesForCommand = function(unreadMessages) {
             } else if (StringUtil.startsWith(message.message, YUMI_KEYWORD + ' show aliases')) {
                 var user = message.from;
 
-                yumiDb.view('yumi', 'alias', {
-                    key: user.user_id
-                }, function(error, body) {
-
-                    if (error) {
-                        throw error;
-                    }
-
-                    console.log(body);
-
+                AliasService.getAllAliasesForUser(user).then(function(aliases) {
                     var messageString = '<ul>';
                     body.rows.forEach(function(row) {
                         messageString = messageString + '<li>' + row.value.alias + ' -> ' + row.value.planKey + '</li>'
@@ -287,10 +224,33 @@ var searchUnreadMessagesForCommand = function(unreadMessages) {
                     hipchat.postMessage(params, function(response) {
                         console.log(response);
                     });
-                })
-
+                });
             }
         }
+    });
+}
+
+var queueBuildAndSendHipchatMessage = function(planKey) {
+    bamboo.queueBuild(planKey, function(error, response) {
+
+        if (error) {
+            console.log(error);
+        } else {
+            var resultUrl = 'https://' + config.bamboo.domain + '/browse/' + response.buildResultKey;
+            var messageString = 'Queuing build for plan ' + planKey + '. <a href=' + resultUrl + '>View status.</a>';
+            var params = {
+                room: config.hipchat.room,
+                from: 'Yumi',
+                message: messageString,
+                notify: false,
+                color: 'green',
+                message_format: 'html'
+            }
+            hipchat.postMessage(params, function(response) {
+                console.log(response);
+            });
+        }
+
     });
 }
 
