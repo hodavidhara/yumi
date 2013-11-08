@@ -1,14 +1,15 @@
 var request = require('request'),
     StringUtil = require('../util/StringUtil.js');
 
-var Bamboo = function (domain) {
-  this.username = null;
-  this.password = null;
-  if (StringUtil.startsWith(domain, 'http://') || StringUtil.startsWith('https://')) {
-    this.domain = domain;
-  } else {
-    this.domain = 'https://' + domain;
-  }
+var Bamboo = function(domain) {
+    this.username = null;
+    this.password = null;
+    if (StringUtil.startsWith(domain, 'http://') || StringUtil.startsWith('https://')) {
+        this.domain = domain;
+    }
+    else {
+        this.domain = 'https://' + domain;
+    }
 }
 
 /**
@@ -20,24 +21,24 @@ var Bamboo = function (domain) {
  */
 Bamboo.prototype.authenticate = function(username, password, callback) {
 
-  var bamboo = this;
-  var uri = this.domain + '/rest/api/latest/plan.json?os_authType=basic&os_username=' + username + '&os_password=' + password;
+    var bamboo = this;
+    var uri = this.domain + '/rest/api/latest/plan.json?os_authType=basic&os_username=' + username + '&os_password=' + password;
 
-  request.get(uri, function(error, response, body) {
-    if (error) {
-      console.error('Authentication Failed');
-      console.error(error);
-      callback(error);
-    } else if (response.statusCode === 401) {
-      console.log('Incorrect username or password for: ' + username);
-      callback(null, false)
-    }
+    request.get(uri, function(error, response, body) {
+        if (error) {
+            console.error('Authentication Failed');
+            console.error(error);
+            callback(error);
+        } else if (response.statusCode === 401) {
+            console.log('Incorrect username or password for: ' + username);
+            callback(null, false)
+        }
 
-    bamboo.username = username;
-    bamboo.password = password;
+        bamboo.username = username;
+        bamboo.password = password;
 
-    callback(null, true);
-  });
+        callback(null, true);
+    });
 }
 
 /**
@@ -47,17 +48,17 @@ Bamboo.prototype.authenticate = function(username, password, callback) {
  */
 Bamboo.prototype.getPlans = function(callback) {
 
-  // TODO: pick a better strategy for getting all the plans.
-  var uri = this.domain + '/rest/api/latest/plan.json?max-result=50';
+    // TODO: pick a better strategy for getting all the plans.
+    var uri = this.domain + '/rest/api/latest/plan.json?max-result=50';
 
-  request.get(uri, function(error, response, body) {
-    _handleErrors(error, response, callback);
+    request.get(uri, function(error, response, body) {
+        _handleErrors(error, response, callback);
 
-    if (callback) {
-      var parsedBody = JSON.parse(body);
-      callback(null, parsedBody.plans.plan);
-    }
-  }).auth(this.username, this.password);
+        if (callback) {
+            var parsedBody = JSON.parse(body);
+            callback(null, parsedBody.plans.plan);
+        }
+    }).auth(this.username, this.password);
 }
 
 /**
@@ -68,24 +69,24 @@ Bamboo.prototype.getPlans = function(callback) {
  */
 Bamboo.prototype.getPlansForProject = function(projectKey, callback) {
 
-  this.getPlans(function(error, allPlans) {
+    this.getPlans(function(error, allPlans) {
 
-    if (error) {
-      callback(error);
-    }
+        if (error) {
+            callback(error);
+        }
 
-    var projectPlans = [];
+        var projectPlans = [];
 
-    allPlans.forEach(function(plan) {
-      if (StringUtil.startsWith(plan.key, projectKey)) {
-        projectPlans.push(plan);
-      }
+        allPlans.forEach(function(plan) {
+            if (StringUtil.startsWith(plan.key, projectKey)) {
+                projectPlans.push(plan);
+            }
+        });
+
+        if (callback) {
+            callback(null, projectPlans);
+        }
     });
-
-    if (callback) {
-      callback(null, projectPlans);
-    }
-  });
 }
 
 /**
@@ -96,32 +97,32 @@ Bamboo.prototype.getPlansForProject = function(projectKey, callback) {
  */
 Bamboo.prototype.getPlan = function(planKey, callback) {
 
-  var uri = this.domain + '/rest/api/latest/plan/' + planKey + '.json';
+    var uri = this.domain + '/rest/api/latest/plan/' + planKey + '.json';
 
-  request.get(uri, function(error, response, body) {
-    _handleErrors(error, response, callback);
+    request.get(uri, function(error, response, body) {
+        _handleErrors(error, response, callback);
 
-    var plan = JSON.parse(body);
+        var plan = JSON.parse(body);
 
-    if (callback) {
-      callback(null, plan);
-    }
-  }).auth(this.username, this.password);
+        if (callback) {
+            callback(null, plan);
+        }
+    }).auth(this.username, this.password);
 }
 
 Bamboo.prototype.getBranchesForPlan = function(planKey, callback) {
 
-  var uri = this.domain + '/rest/api/latest/plan/' + planKey + '/branch.json';
+    var uri = this.domain + '/rest/api/latest/plan/' + planKey + '/branch.json';
 
-  request.get(uri, function(error, response, body) {
-    _handleErrors(error, response, callback);
+    request.get(uri, function(error, response, body) {
+        _handleErrors(error, response, callback);
 
-    var parsedBody = JSON.parse(body);
+        var parsedBody = JSON.parse(body);
 
-    if (callback) {
-      callback(null, parsedBody.branches.branch);
-    }
-  }).auth(this.username, this.password);
+        if (callback) {
+            callback(null, parsedBody.branches.branch);
+        }
+    }).auth(this.username, this.password);
 }
 
 /**
@@ -134,17 +135,17 @@ Bamboo.prototype.getBranchesForPlan = function(planKey, callback) {
  */
 Bamboo.prototype.getResult = function(planKey, callback) {
 
-  var uri = this.domain + '/rest/api/latest/result/' + planKey + '.json';
+    var uri = this.domain + '/rest/api/latest/result/' + planKey + '.json';
 
-  request.get(uri, function(error, response, body) {
-    _handleErrors(error, response, callback);
+    request.get(uri, function(error, response, body) {
+        _handleErrors(error, response, callback);
 
-    var parsedBody = JSON.parse(body);
+        var parsedBody = JSON.parse(body);
 
-    if (callback) {
-      callback(parsedBody.results);
-    }
-  }).auth(this.username, this.password);
+        if (callback) {
+            callback(parsedBody.results);
+        }
+    }).auth(this.username, this.password);
 }
 
 /**
@@ -155,33 +156,33 @@ Bamboo.prototype.getResult = function(planKey, callback) {
  */
 Bamboo.prototype.queueBuild = function(planKey, callback) {
 
-  var uri = this.domain + '/rest/api/latest/queue/' + planKey + '.json';
+    var uri = this.domain + '/rest/api/latest/queue/' + planKey + '.json';
 
-  request.post(uri, function(error, response, body) {
-    _handleErrors(error, response, callback);
+    request.post(uri, function(error, response, body) {
+        _handleErrors(error, response, callback);
 
-    var queueResult = JSON.parse(body);
+        var queueResult = JSON.parse(body);
 
-    if (callback) {
-      callback(null, queueResult);
-    }
-  }).auth(this.username, this.password);
+        if (callback) {
+            callback(null, queueResult);
+        }
+    }).auth(this.username, this.password);
 }
 
 var _handleErrors = function(error, response, callback) {
-  if (error) {
-    if (callback) {
-      callback(error);
+    if (error) {
+        if (callback) {
+            callback(error);
+        }
+    } else if (response.statusCode === 401) {
+        console.log('Not authenticated');
+        var response = {
+            message: "No bamboo user authenticated."
+        }
+        if (callback) {
+            callback(response);
+        }
     }
-  } else if (response.statusCode === 401) {
-    console.log('Not authenticated');
-    var response = {
-      message: "No bamboo user authenticated."
-    }
-    if (callback) {
-      callback(response);
-    }
-  }
 };
 
 module.exports = Bamboo;
