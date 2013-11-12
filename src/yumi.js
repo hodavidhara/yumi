@@ -3,6 +3,7 @@ var Bamboo = require('./bamboo/bamboo.js'),
     moment = require('moment'),
     config = require('./config.json'),
     StringUtil = require('./util/StringUtil.js'),
+    HipchatService = require('./hipchat/HipchatService.js'),
     AliasService = require('./db/AliasService.js');
 
 console.log('Starting yumi with config:' + JSON.stringify(config));
@@ -41,8 +42,8 @@ var poll = function(fromDate) {
     console.log('polling for messages.');
     var params = {
         room: config.hipchat.room,
-        date: 'recent'
-    }
+    date: 'recent'
+}
     hipchat.getHistory(params, function(response, error) {
         if (error) {
             console.log('ERROR: ' + error);
@@ -128,28 +129,19 @@ var searchUnreadMessagesForCommand = function(unreadMessages) {
                         messageString = messageString + '<li>' + plan.name + ' (' + plan.key + ')</li>';
                     });
                     messageString = messageString + '</ul>';
-                    var params = {
-                        room: config.hipchat.room,
-                        from: 'Yumi',
-                        message: messageString,
-                        notify: false,
-                        color: 'green',
-                        message_format: 'html'
-                    }
-                    hipchat.postMessage(params, function(response) {
-                        console.log(response);
-                    });
+                    HipchatService.sendMessage(messageString);
                 });
             } else if (StringUtil.startsWith(message.message, YUMI_KEYWORD + ' run plan')) {
                 var tokens = message.message.split(' ');
                 var userInput = tokens[3];
-                var planKey = null;
                 var user = message.from;
 
 
                 AliasService.getPlanKeyForAlias(user, userInput)
                     .then(queueBuildAndSendHipchatMessage)
-                    .fail(queueBuildAndSendHipchatMessage(userInput));
+                    .fail(function() {
+                        queueBuildAndSendHipchatMessage(userInput);
+                    });
             } else if (StringUtil.startsWith(message.message, YUMI_KEYWORD + ' show branches')) {
                 var tokens = message.message.split(' ');
                 var planKey = tokens[3];
@@ -166,19 +158,7 @@ var searchUnreadMessagesForCommand = function(unreadMessages) {
                         messageString = messageString + '<li>' + branch.shortName + ' (' + branch.key + ')</li>';
                     });
                     messageString = messageString + '</ul>';
-                    var params = {
-                        room: config.hipchat.room,
-                        from: 'Yumi',
-                        message: messageString,
-                        notify: false,
-                        color: 'green',
-                        message_format: 'html'
-                    }
-                    console.log(messageString);
-                    hipchat.postMessage(params, function(response) {
-                        console.log(response);
-                    });
-
+                    HipchatService.sendMessage(messageString);
                 });
             } else if (StringUtil.startsWith(message.message, YUMI_KEYWORD + ' alias')) {
                 var tokens = message.message.split(' ');
@@ -190,17 +170,7 @@ var searchUnreadMessagesForCommand = function(unreadMessages) {
 
                     AliasService.createAlias(user, planKey, aliasKey).then(function() {
                         var messageString = 'Aliased ' + planKey + ' to ' + planAlias + ' for ' + user.name;
-                        var params = {
-                            room: config.hipchat.room,
-                            from: 'Yumi',
-                            message: messageString,
-                            notify: false,
-                            color: 'green',
-                            message_format: 'html'
-                        }
-                        hipchat.postMessage(params, function(response) {
-                            console.log(response);
-                        });
+                        HipchatService.sendMessage(messageString);
                     });
                 }
             } else if (StringUtil.startsWith(message.message, YUMI_KEYWORD + ' show aliases')) {
@@ -212,18 +182,7 @@ var searchUnreadMessagesForCommand = function(unreadMessages) {
                         messageString = messageString + '<li>' + row.value.alias + ' -> ' + row.value.planKey + '</li>'
                     })
                     messageString = messageString + '</ul>';
-                    var params = {
-                        room: config.hipchat.room,
-                        from: 'Yumi',
-                        message: messageString,
-                        notify: false,
-                        color: 'green',
-                        message_format: 'html'
-                    }
-                    console.log(messageString);
-                    hipchat.postMessage(params, function(response) {
-                        console.log(response);
-                    });
+                    HipchatService.sendMessage(messageString);
                 });
             }
         }
@@ -238,17 +197,7 @@ var queueBuildAndSendHipchatMessage = function(planKey) {
         } else {
             var resultUrl = 'https://' + config.bamboo.domain + '/browse/' + response.buildResultKey;
             var messageString = 'Queuing build for plan ' + planKey + '. <a href=' + resultUrl + '>View status.</a>';
-            var params = {
-                room: config.hipchat.room,
-                from: 'Yumi',
-                message: messageString,
-                notify: false,
-                color: 'green',
-                message_format: 'html'
-            }
-            hipchat.postMessage(params, function(response) {
-                console.log(response);
-            });
+            HipchatService.sendMessage(messageString);
         }
 
     });

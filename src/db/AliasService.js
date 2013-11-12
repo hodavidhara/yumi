@@ -10,7 +10,7 @@ var AliasService = function() {
     });
 };
 
-AliasService.prototype.createAlias = function(user, planKey, aliasKey) {
+AliasService.prototype.createAlias = function(user, planKey, aliasKey, callback) {
     var aliasCreated = q.defer();
     
     var alias = {
@@ -23,24 +23,33 @@ AliasService.prototype.createAlias = function(user, planKey, aliasKey) {
     this.yumiDb.insert(alias, {}, function(error, body) {
         if (error) {
             aliasCreated.reject(error);
+            if (callback) {
+                callback(error);
+            }
         } else {
             aliasCreated.resolve(body);
+            if (callback) {
+                callback(null, body);
+            }
         }
     });
     
     return aliasCreated.promise;
 };
 
-AliasService.prototype.getAllAliasesForUser = function(user) {
+AliasService.prototype.getAllAliasesForUser = function(user, callback) {
     
     var aliasFound = q.defer();
 
-    var userId = getUserIdFromGenericUserInput(user);
+    var userId = _getUserIdFromGenericUserInput(user);
 
     this.yumiDb.view('yumi', 'alias', {key: userId}, function(error, body) {
 
         if (error) {
             aliasFound.reject(error);
+            if (callback) {
+                callback(error);
+            }
         } else {
 
             var userAliases = [];
@@ -52,13 +61,16 @@ AliasService.prototype.getAllAliasesForUser = function(user) {
                 });
             });
             aliasFound.resolve(userAliases);
+            if (callback) {
+                callback(null, userAliases);
+            }
         }
     });
     
     return aliasFound.promise;
 };
 
-AliasService.prototype.getPlanKeyForAlias = function(user, aliasKey) {
+AliasService.prototype.getPlanKeyForAlias = function(user, aliasKey, callback) {
 
     var planKeyFound = q.defer();
 
@@ -66,19 +78,28 @@ AliasService.prototype.getPlanKeyForAlias = function(user, aliasKey) {
         aliases.forEach(function(alias) {
            if (alias.aliasKey == aliasKey) {
                planKeyFound.resolve(alias.planKey);
+               if (callback) {
+                   callback(null, alias.planKey);
+               }
            }
         });
 
         // no matching alias found
-        planKey.reject("No matching alias found");
+        planKey.reject("No matching alias found.");
+        if (callback) {
+            callback("No matching alias found.");
+        }
     }).fail(function(error) {
         planKeyFound.reject(error);
+        if (callback) {
+            callback(error);
+        }
     });
 
     return planKeyFound.promise;
 }
 
-var getUserIdFromGenericUserInput = function(user) {
+var _getUserIdFromGenericUserInput = function(user) {
     if (user instanceof String) {
         return user;
     } else {
@@ -88,4 +109,4 @@ var getUserIdFromGenericUserInput = function(user) {
     }
 }
 
-module.exports = AliasService;
+module.exports = AliasService();
