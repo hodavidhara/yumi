@@ -52,7 +52,7 @@ var poll = function(fromDate) {
         var unreadMessages = getUnreadMessages(messages, fromDate);
         var mostRecentDate = getMostRecentDateFromMessages(unreadMessages);
         searchUnreadMessagesForCommand(unreadMessages);
-        setTimeout(poll, 5000, mostRecentDate);
+        setTimeout(poll, 7000, mostRecentDate);
     });
 }
 
@@ -178,8 +178,8 @@ var searchUnreadMessagesForCommand = function(unreadMessages) {
 
                 AliasService.getAllAliasesForUser(user).then(function(aliases) {
                     var messageString = '<ul>';
-                    body.rows.forEach(function(row) {
-                        messageString = messageString + '<li>' + row.value.alias + ' -> ' + row.value.planKey + '</li>'
+                    aliases.forEach(function(alias) {
+                        messageString = messageString + '<li>' + alias.aliasKey + ' -> ' + alias.planKey + '</li>'
                     })
                     messageString = messageString + '</ul>';
                     HipchatService.sendMessage(messageString);
