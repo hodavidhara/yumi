@@ -5,7 +5,7 @@ var AliasService = function() {
     this.yumiDb = null;
     var service = this;
     
-    DbHelper.getDb.then(function(db) {
+    DbHelper.getDb().then(function(db) {
         service.yumiDb = db;
     });
 };
@@ -109,4 +109,4 @@ var _getUserIdFromGenericUserInput = function(user) {
     }
 }
 
-module.exports = AliasService();
+module.exports = new AliasService();

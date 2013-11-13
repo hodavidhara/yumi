@@ -30,4 +30,4 @@ HipchatService.prototype.sendMessage = function(message, callback) {
     return messageSent.promise;
 }
 
-module.exports = HipchatService();
+module.exports = new HipchatService();

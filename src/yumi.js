@@ -52,7 +52,7 @@ var poll = function(fromDate) {
         var unreadMessages = getUnreadMessages(messages, fromDate);
         var mostRecentDate = getMostRecentDateFromMessages(unreadMessages);
         searchUnreadMessagesForCommand(unreadMessages);
-        setTimeout(poll, 10000, mostRecentDate);
+        setTimeout(poll, 5000, mostRecentDate);
     });
 }
 
