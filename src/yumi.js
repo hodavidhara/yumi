@@ -115,7 +115,11 @@ var searchUnreadMessagesForCommand = function(unreadMessages) {
 
     unreadMessages.forEach(function(message) {
         if (StringUtil.startsWith(message.message, YUMI_KEYWORD)) {
-            if (message.message === YUMI_KEYWORD + ' show plans') {
+            if (message.message === YUMI_KEYWORD + ' help') {
+                var messageString = 'Commands:<br/>';
+                messageString = messageString + 'show plans - shows all build plans';
+                HipchatService.sendMessage(messageString);
+            } else if (message.message === YUMI_KEYWORD + ' show plans') {
 
                 bamboo.getPlansForProject(config.bamboo.project, function(error, plans) {
 
@@ -124,11 +128,10 @@ var searchUnreadMessagesForCommand = function(unreadMessages) {
                         return;
                     }
 
-                    var messageString = '<ul>';
+                    var messageString = '';
                     plans.forEach(function(plan) {
-                        messageString = messageString + '<li>' + plan.name + ' (' + plan.key + ')</li>';
+                        messageString = messageString + plan.name + ' (' + plan.key + ')<br/>';
                     });
-                    messageString = messageString + '</ul>';
                     HipchatService.sendMessage(messageString);
                 });
             } else if (StringUtil.startsWith(message.message, YUMI_KEYWORD + ' run plan')) {
@@ -153,11 +156,10 @@ var searchUnreadMessagesForCommand = function(unreadMessages) {
                         return;
                     }
 
-                    var messageString = '<ul>';
+                    var messageString = '';
                     branches.forEach(function(branch) {
-                        messageString = messageString + '<li>' + branch.shortName + ' (' + branch.key + ')</li>';
+                        messageString = messageString + branch.shortName + ' (' + branch.key + ')<br/>';
                     });
-                    messageString = messageString + '</ul>';
                     HipchatService.sendMessage(messageString);
                 });
             } else if (StringUtil.startsWith(message.message, YUMI_KEYWORD + ' alias')) {
@@ -177,11 +179,10 @@ var searchUnreadMessagesForCommand = function(unreadMessages) {
                 var user = message.from;
 
                 AliasService.getAllAliasesForUser(user).then(function(aliases) {
-                    var messageString = '<ul>';
+                    var messageString = '';
                     aliases.forEach(function(alias) {
-                        messageString = messageString + '<li>' + alias.aliasKey + ' -> ' + alias.planKey + '</li>'
+                        messageString = messageString + alias.aliasKey + ' -> ' + alias.planKey + '<br/>'
                     })
-                    messageString = messageString + '</ul>';
                     HipchatService.sendMessage(messageString);
                 });
             }
