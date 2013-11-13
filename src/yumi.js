@@ -116,8 +116,12 @@ var searchUnreadMessagesForCommand = function(unreadMessages) {
     unreadMessages.forEach(function(message) {
         if (StringUtil.startsWith(message.message, YUMI_KEYWORD)) {
             if (message.message === YUMI_KEYWORD + ' help') {
-                var messageString = 'Commands:<br/>';
-                messageString = messageString + 'show plans - shows all build plans';
+                var messageString = '<strong>Commands:</strong><br/>';
+                messageString = messageString + '&emsp;show plans - Lists all build plans.<br/>';
+                messageString = messageString + '&emsp;show branches &lt;plan key&gt; Lists all branches of the given plan.<br/>';
+                messageString = messageString + '&emsp;run build &lt;plan key || branch key || alias&gt; - Runs a build for the given plan, branch, or personal alias.<br/>';
+                messageString = messageString + '&emsp;alias &lt;plan key&gt; &lt;alias&gt; - Creates a personal alias for a plan key.<br/>';
+                messageString = messageString + '&emsp;show aliases - Lists your personal aliases.<br/>';
                 HipchatService.sendMessage(messageString);
             } else if (message.message === YUMI_KEYWORD + ' show plans') {
 
@@ -134,7 +138,7 @@ var searchUnreadMessagesForCommand = function(unreadMessages) {
                     });
                     HipchatService.sendMessage(messageString);
                 });
-            } else if (StringUtil.startsWith(message.message, YUMI_KEYWORD + ' run plan')) {
+            } else if (StringUtil.startsWith(message.message, YUMI_KEYWORD + ' run build')) {
                 var tokens = message.message.split(' ');
                 var userInput = tokens[3];
                 var user = message.from;
