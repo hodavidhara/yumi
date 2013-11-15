@@ -24,7 +24,7 @@ var getYumiDb = function() {
                     dbCreated.resolve(yumiDb);
                 });
             } else {
-                throw error;
+                console.error('Error connecting to couchdb. Aliasing will not work.');
             }
         } else {
             var yumiDb = nano.use(yumiDbName);

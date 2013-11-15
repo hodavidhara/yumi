@@ -174,8 +174,8 @@ var searchUnreadMessagesForCommand = function(unreadMessages) {
 
                 if (planKey && aliasKey) {
 
-                    AliasService.createAlias(user, planKey, aliasKey).then(function() {
-                        var messageString = 'Aliased ' + planKey + ' to ' + planAlias + ' for ' + user.name;
+                    AliasService.createAlias(user, planKey, aliasKey).then(function(response) {
+                        var messageString = 'Aliased ' + planKey + ' to ' + aliasKey + ' for ' + user.name;
                         HipchatService.sendMessage(messageString);
                     });
                 }
