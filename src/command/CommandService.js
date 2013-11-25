@@ -152,7 +152,7 @@ CommandService.prototype.runCommand = function(user, messageString) {
         var args = argString.split(' ');
         
         // Run the command.
-        command.run.call(CommandService, user, args);
+        command.run.call(this, user, args);
     }
 };
 
