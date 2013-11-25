@@ -1,13 +1,12 @@
 var HipchatService = require('../hipchat/HipchatService.js'),
-    AliasService = require('./db/AliasService.js'),
-    Bamboo = require('./bamboo/bamboo.js'),
+    AliasService = require('../db/AliasService.js'),
+    config = require('../config.json'),
     StringUtil = require('../util/StringUtil.js');
-
-var bamboo = new Bamboo(config.bamboo.domain);
 
 var YUMI_KEYWORD = '!yumi';
 
-var CommandService = function() {
+var CommandService = function(bamboo) {
+    this.bamboo = bamboo;
     // TODO: Should these be made objects of some sort?
     this.commands = [
         {
@@ -30,7 +29,7 @@ var CommandService = function() {
             args: '',
             description: 'Lists all build plans',
             run: function() {
-                bamboo.getPlansForProject(config.bamboo.project, function(error, plans) {
+                this.bamboo.getPlansForProject(config.bamboo.project, function(error, plans) {
 
                     if (error) {
                         console.log(error);
@@ -66,7 +65,7 @@ var CommandService = function() {
             run: function(user, args) {
                 var planKey = args[0];
 
-                bamboo.getBranchesForPlan(planKey, function(error, branches) {
+                this.bamboo.getBranchesForPlan(planKey, function(error, branches) {
 
                     if (error) {
                         console.log(error);
@@ -124,32 +123,41 @@ CommandService.prototype.getCommands = function() {
 };
 
 CommandService.prototype.getCommandForMessage = function(messageString) {
+    console.log('Searching for command for message: ' + messageString);
+    var retCommand = null;
     this.commands.forEach(function(command) {
         var fullCommand = YUMI_KEYWORD + ' ' + command.command;
         if (StringUtil.startsWith(messageString, fullCommand)) {
-            return command;
+            console.log('command found! returning command: ' + JSON.stringify(command));
+            retCommand = command;
+            return false;
         }
     });
-    return null;
+    return retCommand;
 };
 
 CommandService.prototype.runCommand = function(user, messageString) {
+    console.log(this);
     var command = this.getCommandForMessage(messageString);
 
+    console.log('command: ' + command);
+
     if (command) {
-        
+
+        console.log('running command for: ' + command);
+
         // Extract the arguments.
         var fullCommand = YUMI_KEYWORD + ' ' + command.command;
         var argString = messageString.slice(fullCommand.length);
         var args = argString.split(' ');
         
         // Run the command.
-        command.run(user, args);
+        command.run.call(CommandService, user, args);
     }
 };
 
 var _queueBuildAndSendHipchatMessage = function(planKey) {
-    bamboo.queueBuild(planKey, function(error, response) {
+    this.bamboo.queueBuild(planKey, function(error, response) {
 
         if (error) {
             console.log(error);
@@ -162,4 +170,4 @@ var _queueBuildAndSendHipchatMessage = function(planKey) {
     });
 };
 
-module.exports = new CommandService();
+module.exports = CommandService;

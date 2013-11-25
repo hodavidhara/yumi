@@ -12,6 +12,8 @@ console.log('Starting yumi with config:' + JSON.stringify(config));
 var bamboo = new Bamboo(config.bamboo.domain),
     hipchat = new HipchatClient(config.hipchat.apiKey);
 
+var yumiCommands = new CommandService(bamboo);
+
 var YUMI_KEYWORD = '!yumi';
 
 var startYumi = function() {
@@ -112,7 +114,7 @@ var searchUnreadMessagesForCommand = function(unreadMessages) {
 
     unreadMessages.forEach(function(message) {
         if (StringUtil.startsWith(message.message, YUMI_KEYWORD)) {
-            CommandService.runCommand(message.from, message.message);
+            yumiCommands.runCommand(message.from, message.message);
         }
     });
 }
