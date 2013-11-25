@@ -8,9 +8,7 @@ var bamboo = new Bamboo(config.bamboo.domain);
 
 var YUMI_KEYWORD = '!yumi';
 
-var CommandService = function(bamboo) {
-    this.bamboo = bamboo;
-};
+var CommandService = function() {};
 
 // TODO: Should these be made objects of some sort?
 CommandService.prototype.commands = [
@@ -175,4 +173,4 @@ bamboo.authenticate(config.bamboo.username, config.bamboo.password, function(err
     }
 });
 
-module.exports = CommandService;
+module.exports = new CommandService();
