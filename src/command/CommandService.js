@@ -68,6 +68,8 @@ CommandService.prototype.commands = [
         run: function(user, args) {
             var planKey = args[0];
 
+            console.log('getting branch for plan key: ' + planKey);
+
             this.bamboo.getBranchesForPlan(planKey, function(error, branches) {
 
                 if (error) {
@@ -141,10 +143,14 @@ CommandService.prototype.runCommand = function(user, messageString) {
 
     if (command) {
 
+        console.log('command found: ' + JSON.stringify(command));
         // Extract the arguments.
         var fullCommand = YUMI_KEYWORD + ' ' + command.command;
         var argString = messageString.slice(fullCommand.length);
+        argString = argString.trim();
+        console.log('running command with argString: ' + argString);
         var args = argString.split(' ');
+        console.log('args:' + JSON.stringify(args));
         
         // Run the command.
         command.run.call(this, user, args);
