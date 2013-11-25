@@ -7,116 +7,117 @@ var YUMI_KEYWORD = '!yumi';
 
 var CommandService = function(bamboo) {
     this.bamboo = bamboo;
-    // TODO: Should these be made objects of some sort?
-    this.commands = [
-        {
-            command: 'help',
-            args: '',
-            description: 'Displays the list of Yumi commands.',
-            run: function() {
-                // TODO: Build this from list of commands.
-                var messageString = '<strong>Commands:</strong><br/>';
-                messageString = messageString + '&emsp;show plans - Lists all build plans.<br/>';
-                messageString = messageString + '&emsp;show branches &lt;plan key&gt; - Lists all branches of the given plan.<br/>';
-                messageString = messageString + '&emsp;run build &lt;plan key || branch key || alias&gt; - Runs a build for the given plan, branch, or personal alias.<br/>';
-                messageString = messageString + '&emsp;alias &lt;plan key&gt; &lt;alias&gt; - Creates a personal alias for a plan key.<br/>';
-                messageString = messageString + '&emsp;show aliases - Lists your personal aliases.<br/>';
+};
+
+// TODO: Should these be made objects of some sort?
+CommandService.prototype.commands = [
+    {
+        command: 'help',
+        args: '',
+        description: 'Displays the list of Yumi commands.',
+        run: function() {
+            // TODO: Build this from list of commands.
+            var messageString = '<strong>Commands:</strong><br/>';
+            messageString = messageString + '&emsp;show plans - Lists all build plans.<br/>';
+            messageString = messageString + '&emsp;show branches &lt;plan key&gt; - Lists all branches of the given plan.<br/>';
+            messageString = messageString + '&emsp;run build &lt;plan key || branch key || alias&gt; - Runs a build for the given plan, branch, or personal alias.<br/>';
+            messageString = messageString + '&emsp;alias &lt;plan key&gt; &lt;alias&gt; - Creates a personal alias for a plan key.<br/>';
+            messageString = messageString + '&emsp;show aliases - Lists your personal aliases.<br/>';
+            HipchatService.sendMessage(messageString);
+        }
+    },
+    {
+        command: 'show plans',
+        args: '',
+        description: 'Lists all build plans',
+        run: function() {
+            this.bamboo.getPlansForProject(config.bamboo.project, function(error, plans) {
+
+                if (error) {
+                    console.log(error);
+                    return;
+                }
+
+                var messageString = '';
+                plans.forEach(function(plan) {
+                    messageString = messageString + plan.name + ' (' + plan.key + ')<br/>';
+                });
                 HipchatService.sendMessage(messageString);
-            }
-        },
-        {
-            command: 'show plans',
-            args: '',
-            description: 'Lists all build plans',
-            run: function() {
-                this.bamboo.getPlansForProject(config.bamboo.project, function(error, plans) {
+            });
+        }
+    },
+    {
+        command: 'run build',
+        args: '<plan key || branch key || alias>',
+        description: 'Runs a build for the given plan, branch, or personal alias.',
+        run: function(user, args) {
+            var userInput = args[0];
 
-                    if (error) {
-                        console.log(error);
-                        return;
-                    }
-
-                    var messageString = '';
-                    plans.forEach(function(plan) {
-                        messageString = messageString + plan.name + ' (' + plan.key + ')<br/>';
-                    });
-                    HipchatService.sendMessage(messageString);
+            AliasService.getPlanKeyForAlias(user, userInput)
+                .then(_queueBuildAndSendHipchatMessage)
+                .fail(function() {
+                    _queueBuildAndSendHipchatMessage(userInput);
                 });
-            }
-        },
-        {
-            command: 'run build',
-            args: '<plan key || branch key || alias>',
-            description: 'Runs a build for the given plan, branch, or personal alias.',
-            run: function(user, args) {
-                var userInput = args[0];
+        }
+    },
+    {
+        command: 'show branches',
+        args: '<plan key>',
+        description: 'Lists all branches of the given plan.',
+        run: function(user, args) {
+            var planKey = args[0];
 
-                AliasService.getPlanKeyForAlias(user, userInput)
-                    .then(_queueBuildAndSendHipchatMessage)
-                    .fail(function() {
-                        _queueBuildAndSendHipchatMessage(userInput);
-                    });
-            }
-        },
-        {
-            command: 'show branches',
-            args: '<plan key>',
-            description: 'Lists all branches of the given plan.',
-            run: function(user, args) {
+            this.bamboo.getBranchesForPlan(planKey, function(error, branches) {
+
+                if (error) {
+                    console.log(error);
+                    return;
+                }
+
+                var messageString = '';
+                branches.forEach(function(branch) {
+                    messageString = messageString + branch.shortName + ' (' + branch.key + ')<br/>';
+                });
+                HipchatService.sendMessage(messageString);
+            });
+        }
+    },
+    {
+        command: 'alias',
+        args: '<plan key> <alias>',
+        description: 'Creates a personal alias for a plan key.',
+        run: function(user, args) {
+            // TODO handle error case.
+            if (args.length === 2) {
                 var planKey = args[0];
+                var aliasKey = args[1];
 
-                this.bamboo.getBranchesForPlan(planKey, function(error, branches) {
+                if (planKey && aliasKey) {
 
-                    if (error) {
-                        console.log(error);
-                        return;
-                    }
-
-                    var messageString = '';
-                    branches.forEach(function(branch) {
-                        messageString = messageString + branch.shortName + ' (' + branch.key + ')<br/>';
+                    AliasService.createAlias(user, planKey, aliasKey).then(function(response) {
+                        var messageString = 'Aliased ' + planKey + ' to ' + aliasKey + ' for ' + user.name;
+                        HipchatService.sendMessage(messageString);
                     });
-                    HipchatService.sendMessage(messageString);
-                });
-            }
-        },
-        {
-            command: 'alias',
-            args: '<plan key> <alias>',
-            description: 'Creates a personal alias for a plan key.',
-            run: function(user, args) {
-                // TODO handle error case.
-                if (args.length === 2) {
-                    var planKey = args[0];
-                    var aliasKey = args[1];
-
-                    if (planKey && aliasKey) {
-
-                        AliasService.createAlias(user, planKey, aliasKey).then(function(response) {
-                            var messageString = 'Aliased ' + planKey + ' to ' + aliasKey + ' for ' + user.name;
-                            HipchatService.sendMessage(messageString);
-                        });
-                    }
                 }
             }
-        },
-        {
-            command: 'show aliases',
-            args: '',
-            description: 'Lists your personal aliases.',
-            run: function(user, args) {
-
-                AliasService.getAllAliasesForUser(user).then(function(aliases) {
-                    var messageString = '';
-                    aliases.forEach(function(alias) {
-                        messageString = messageString + alias.aliasKey + ' -> ' + alias.planKey + '<br/>'
-                    });
-                    HipchatService.sendMessage(messageString);
-                });
-            }
         }
-    ]
-};
+    },
+    {
+        command: 'show aliases',
+        args: '',
+        description: 'Lists your personal aliases.',
+        run: function(user, args) {
+
+            AliasService.getAllAliasesForUser(user).then(function(aliases) {
+                var messageString = '';
+                aliases.forEach(function(alias) {
+                    messageString = messageString + alias.aliasKey + ' -> ' + alias.planKey + '<br/>'
+                });
+                HipchatService.sendMessage(messageString);
+            });
+        }
+    }
+];
 
 CommandService.prototype.getCommands = function() {
     return this.commands;
