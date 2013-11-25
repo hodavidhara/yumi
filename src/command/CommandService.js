@@ -1,7 +1,10 @@
 var HipchatService = require('../hipchat/HipchatService.js'),
+    Bamboo = require('../bamboo/bamboo.js'),
     AliasService = require('../db/AliasService.js'),
     config = require('../config.json'),
     StringUtil = require('../util/StringUtil.js');
+
+var bamboo = new Bamboo(config.bamboo.domain);
 
 var YUMI_KEYWORD = '!yumi';
 
@@ -124,12 +127,10 @@ CommandService.prototype.getCommands = function() {
 };
 
 CommandService.prototype.getCommandForMessage = function(messageString) {
-    console.log('Searching for command for message: ' + messageString);
     var retCommand = null;
     this.commands.forEach(function(command) {
         var fullCommand = YUMI_KEYWORD + ' ' + command.command;
         if (StringUtil.startsWith(messageString, fullCommand)) {
-            console.log('command found! returning command: ' + JSON.stringify(command));
             retCommand = command;
             return false;
         }
@@ -138,14 +139,9 @@ CommandService.prototype.getCommandForMessage = function(messageString) {
 };
 
 CommandService.prototype.runCommand = function(user, messageString) {
-    console.log(this);
     var command = this.getCommandForMessage(messageString);
 
-    console.log('command: ' + command);
-
     if (command) {
-
-        console.log('running command for: ' + command);
 
         // Extract the arguments.
         var fullCommand = YUMI_KEYWORD + ' ' + command.command;
@@ -170,5 +166,13 @@ var _queueBuildAndSendHipchatMessage = function(planKey) {
 
     });
 };
+
+bamboo.authenticate(config.bamboo.username, config.bamboo.password, function(error, isAuthenticated) {
+    if (isAuthenticated) {
+        CommandService.prototype.bamboo = bamboo;
+    } else {
+        console.log('ERROR AUTHENTICATING');
+    }
+});
 
 module.exports = CommandService;
