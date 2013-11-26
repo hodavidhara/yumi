@@ -17,20 +17,17 @@ CommandService.prototype.commands = [
         args: '',
         description: 'Displays the list of Yumi commands.',
         run: function() {
-            // TODO: Build this from list of commands.
             var messageString = '<strong>Commands:</strong><br/>';
-            messageString = messageString + '&emsp;show plans - Lists all build plans.<br/>';
-            messageString = messageString + '&emsp;show branches &lt;plan key&gt; - Lists all branches of the given plan.<br/>';
-            messageString = messageString + '&emsp;run build &lt;plan key || branch key || alias&gt; - Runs a build for the given plan, branch, or personal alias.<br/>';
-            messageString = messageString + '&emsp;alias &lt;plan key&gt; &lt;alias&gt; - Creates a personal alias for a plan key.<br/>';
-            messageString = messageString + '&emsp;show aliases - Lists your personal aliases.<br/>';
+            this.getCommands().forEach(function(command) {
+                messageString = messageString + '&emsp;' + command.command + ' ' + command.args + ' - ' + command.description + '<br/>';
+            });
             HipchatService.sendMessage(messageString);
         }
     },
     {
         command: 'show plans',
         args: '',
-        description: 'Lists all build plans',
+        description: 'Lists all build plans.',
         run: function() {
             this.bamboo.getPlansForProject(config.bamboo.project, function(error, plans) {
 
@@ -49,7 +46,7 @@ CommandService.prototype.commands = [
     },
     {
         command: 'run build',
-        args: '<plan key || branch key || alias>',
+        args: '&lt;plan key || branch key || alias&gt;',
         description: 'Runs a build for the given plan, branch, or personal alias.',
         run: function(user, args) {
             var userInput = args[0];
@@ -63,7 +60,7 @@ CommandService.prototype.commands = [
     },
     {
         command: 'show branches',
-        args: '<plan key>',
+        args: '&lt;plan key&gt;',
         description: 'Lists all branches of the given plan.',
         run: function(user, args) {
             var planKey = args[0];
@@ -87,7 +84,7 @@ CommandService.prototype.commands = [
     },
     {
         command: 'alias',
-        args: '<plan key> <alias>',
+        args: '&lt;plan key&gt; &lt;alias&gt;',
         description: 'Creates a personal alias for a plan key.',
         run: function(user, args) {
             // TODO handle error case.
