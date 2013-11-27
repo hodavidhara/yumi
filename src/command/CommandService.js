@@ -65,6 +65,11 @@ CommandService.prototype.commands = [
         run: function(user, args) {
             var planKey = args[0];
 
+            if (!planKey) {
+                HipchatService.sendMessage('No plan key given.');
+                return;
+            }
+
             console.log('getting branch for plan key: ' + planKey);
 
             this.bamboo.getBranchesForPlan(planKey, function(error, branches) {
@@ -74,11 +79,15 @@ CommandService.prototype.commands = [
                     return;
                 }
 
-                var messageString = '';
-                branches.forEach(function(branch) {
-                    messageString = messageString + branch.shortName + ' (' + branch.key + ')<br/>';
-                });
-                HipchatService.sendMessage(messageString);
+                if (!branches || branches.length === 0) {
+                    HipchatService.sendMessage('No branches found for plan: <strong>' + planKey + '</strong>')
+                } else {
+                    var messageString = '';
+                    branches.forEach(function(branch) {
+                        messageString = messageString + branch.shortName + ' (' + branch.key + ')<br/>';
+                    });
+                    HipchatService.sendMessage(messageString);
+                }
             });
         }
     },
@@ -115,6 +124,14 @@ CommandService.prototype.commands = [
                 });
                 HipchatService.sendMessage(messageString);
             });
+        }
+    },
+    {
+        command: 'celebrate!',
+        args: '',
+        description: 'Awwww yeah!',
+        run: function(user, args) {
+            HipchatService.sendPlainTextMessage('(yumi)(boom)(success)(boom)(yumi)');
         }
     }
 ];

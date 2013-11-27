@@ -30,4 +30,20 @@ HipchatService.prototype.sendMessage = function(message, callback) {
     return messageSent.promise;
 }
 
+HipchatService.prototype.sendPlainTextMessage = function(message, callback) {
+    var messageSent = q.defer();
+    var params = DEFAULT_PARAMS;
+    params.message = message;
+    params.message_format = 'text';
+
+    this.hipchatClient.postMessage(params, function(response) {
+        messageSent.resolve(response);
+        if (callback) {
+            callback(null, response);
+        }
+    });
+
+    return messageSent.promise;
+}
+
 module.exports = new HipchatService();
