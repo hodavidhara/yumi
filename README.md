@@ -37,7 +37,7 @@ Send commands to bamboo from Hipchat
         
 4. Fill in config.json
 
-        vim ./config/config.json
+        vim ./src/config.json
         
 5. Start Yumi
 
