@@ -19,7 +19,9 @@ CommandService.prototype.commands = [
         run: function() {
             var messageString = '<strong>Commands:</strong><br/>';
             this.getCommands().forEach(function(command) {
-                messageString = messageString + '&emsp;' + command.command + ' ' + command.args + ' - ' + command.description + '<br/>';
+                if (command.command !== 'celebrate!') {
+                    messageString = messageString + '&emsp;' + command.command + ' ' + command.args + ' - ' + command.description + '<br/>';
+                }
             });
             HipchatService.sendMessage(messageString);
         }
