@@ -7,7 +7,7 @@ var views = {
     alias: {
         "map": "function(doc) {" + "if(doc.type === 'alias') {" + "emit(doc.user.user_id, doc);" + "}" + "}"
     }
-}
+};
 
 var getYumiDb = function() {
     var dbCreated = q.defer();
@@ -34,7 +34,7 @@ var getYumiDb = function() {
     });
 
     return dbCreated.promise;
-}
+};
 
 var createViewsIfNecessary = function(db) {
     db.get('_design/yumi', function(error, body) {
@@ -72,8 +72,8 @@ var createViewsIfNecessary = function(db) {
             });
         }
     });
-}
+};
 
 module.exports = {
     getDb: getYumiDb
-}
+};

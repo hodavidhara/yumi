@@ -10,7 +10,7 @@ var Bamboo = function(domain) {
     else {
         this.domain = 'https://' + domain;
     }
-}
+};
 
 /**
  * Authenticate a user
@@ -39,7 +39,7 @@ Bamboo.prototype.authenticate = function(username, password, callback) {
 
         callback(null, true);
     });
-}
+};
 
 /**
  * Get all plans from bamboo.
@@ -59,7 +59,7 @@ Bamboo.prototype.getPlans = function(callback) {
             callback(null, parsedBody.plans.plan);
         }
     }).auth(this.username, this.password);
-}
+};
 
 /**
  * Get all plans for a specific project.
@@ -87,7 +87,7 @@ Bamboo.prototype.getPlansForProject = function(projectKey, callback) {
             callback(null, projectPlans);
         }
     });
-}
+};
 
 /**
  * Get a single plan.
@@ -108,7 +108,7 @@ Bamboo.prototype.getPlan = function(planKey, callback) {
             callback(null, plan);
         }
     }).auth(this.username, this.password);
-}
+};
 
 Bamboo.prototype.getBranchesForPlan = function(planKey, callback) {
 
@@ -123,7 +123,7 @@ Bamboo.prototype.getBranchesForPlan = function(planKey, callback) {
             callback(null, parsedBody.branches.branch);
         }
     }).auth(this.username, this.password);
-}
+};
 
 /**
  * Get a result of a plan.
@@ -146,7 +146,7 @@ Bamboo.prototype.getResult = function(planKey, callback) {
             callback(parsedBody.results);
         }
     }).auth(this.username, this.password);
-}
+};
 
 /**
  * Queue a build for a plan.
@@ -167,7 +167,7 @@ Bamboo.prototype.queueBuild = function(planKey, callback) {
             callback(null, queueResult);
         }
     }).auth(this.username, this.password);
-}
+};
 
 var _handleErrors = function(error, response, callback) {
     if (error) {
@@ -178,7 +178,7 @@ var _handleErrors = function(error, response, callback) {
         console.log('Not authenticated');
         var response = {
             message: "No bamboo user authenticated."
-        }
+        };
         if (callback) {
             callback(response);
         }

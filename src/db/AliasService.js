@@ -85,7 +85,7 @@ AliasService.prototype.getPlanKeyForAlias = function(user, aliasKey, callback) {
         });
 
         // no matching alias found
-        planKey.reject("No matching alias found.");
+        planKeyFound.reject("No matching alias found.");
         if (callback) {
             callback("No matching alias found.");
         }
@@ -97,7 +97,7 @@ AliasService.prototype.getPlanKeyForAlias = function(user, aliasKey, callback) {
     });
 
     return planKeyFound.promise;
-}
+};
 
 var _getUserIdFromGenericUserInput = function(user) {
     if (user instanceof String) {
@@ -107,6 +107,6 @@ var _getUserIdFromGenericUserInput = function(user) {
         // Hipchat user objects store the id under the user_id property.
         return user.user_id;
     }
-}
+};
 
 module.exports = new AliasService();

@@ -3,8 +3,7 @@ var Bamboo = require('./bamboo/bamboo.js'),
     moment = require('moment'),
     config = require('./config.json'),
     StringUtil = require('./util/StringUtil.js'),
-    HipchatService = require('./hipchat/HipchatService.js'),
-    AliasService = require('./db/AliasService.js');
+    CommandService = require('./command/CommandService.js');
 
 console.log('Starting yumi with config:' + JSON.stringify(config));
 
@@ -31,7 +30,7 @@ var startYumi = function() {
             poll();
         }
     });
-}
+};
 
 /**
  * Poll for messages and execute commands
@@ -42,8 +41,8 @@ var poll = function(fromDate) {
     console.log('polling for messages.');
     var params = {
         room: config.hipchat.room,
-    date: 'recent'
-}
+        date: 'recent'
+    };
     hipchat.getHistory(params, function(response, error) {
         if (error) {
             console.log('ERROR: ' + error);
@@ -54,7 +53,7 @@ var poll = function(fromDate) {
         searchUnreadMessagesForCommand(unreadMessages);
         setTimeout(poll, 7000, mostRecentDate);
     });
-}
+};
 
 /**
  * Gets all messages from the given list that happened after the given date.
@@ -77,7 +76,7 @@ var getUnreadMessages = function(messages, lastDate) {
     });
 
     return unreadMessages;
-}
+};
 
 /**
  * Gets the date of the most recently posted message.
@@ -100,12 +99,10 @@ var getMostRecentDateFromMessages = function(messages) {
         }
     });
     return mostRecentDate;
-}
+};
 
 /**
- * Goes through the messages and checks the text for any key words, then executes the appropriate command to bamboo.
- *
- * TODO: lots of clean up here.
+ * Goes through the messages and checks the text for the yumi keyword, then executes the appropriate command to bamboo.
  *
  * @param {Array} unreadMessages The list of unread messages.
  */
@@ -115,97 +112,9 @@ var searchUnreadMessagesForCommand = function(unreadMessages) {
 
     unreadMessages.forEach(function(message) {
         if (StringUtil.startsWith(message.message, YUMI_KEYWORD)) {
-            if (message.message === YUMI_KEYWORD + ' help') {
-                var messageString = '<strong>Commands:</strong><br/>';
-                messageString = messageString + '&emsp;show plans - Lists all build plans.<br/>';
-                messageString = messageString + '&emsp;show branches &lt;plan key&gt; Lists all branches of the given plan.<br/>';
-                messageString = messageString + '&emsp;run build &lt;plan key || branch key || alias&gt; - Runs a build for the given plan, branch, or personal alias.<br/>';
-                messageString = messageString + '&emsp;alias &lt;plan key&gt; &lt;alias&gt; - Creates a personal alias for a plan key.<br/>';
-                messageString = messageString + '&emsp;show aliases - Lists your personal aliases.<br/>';
-                HipchatService.sendMessage(messageString);
-            } else if (message.message === YUMI_KEYWORD + ' show plans') {
-
-                bamboo.getPlansForProject(config.bamboo.project, function(error, plans) {
-
-                    if (error) {
-                        console.log(error);
-                        return;
-                    }
-
-                    var messageString = '';
-                    plans.forEach(function(plan) {
-                        messageString = messageString + plan.name + ' (' + plan.key + ')<br/>';
-                    });
-                    HipchatService.sendMessage(messageString);
-                });
-            } else if (StringUtil.startsWith(message.message, YUMI_KEYWORD + ' run build')) {
-                var tokens = message.message.split(' ');
-                var userInput = tokens[3];
-                var user = message.from;
-
-
-                AliasService.getPlanKeyForAlias(user, userInput)
-                    .then(queueBuildAndSendHipchatMessage)
-                    .fail(function() {
-                        queueBuildAndSendHipchatMessage(userInput);
-                    });
-            } else if (StringUtil.startsWith(message.message, YUMI_KEYWORD + ' show branches')) {
-                var tokens = message.message.split(' ');
-                var planKey = tokens[3];
-
-                bamboo.getBranchesForPlan(planKey, function(error, branches) {
-
-                    if (error) {
-                        console.log(error);
-                        return;
-                    }
-
-                    var messageString = '';
-                    branches.forEach(function(branch) {
-                        messageString = messageString + branch.shortName + ' (' + branch.key + ')<br/>';
-                    });
-                    HipchatService.sendMessage(messageString);
-                });
-            } else if (StringUtil.startsWith(message.message, YUMI_KEYWORD + ' alias')) {
-                var tokens = message.message.split(' ');
-                var planKey = tokens[2];
-                var aliasKey = tokens[3];
-                var user = message.from;
-
-                if (planKey && aliasKey) {
-
-                    AliasService.createAlias(user, planKey, aliasKey).then(function(response) {
-                        var messageString = 'Aliased ' + planKey + ' to ' + aliasKey + ' for ' + user.name;
-                        HipchatService.sendMessage(messageString);
-                    });
-                }
-            } else if (StringUtil.startsWith(message.message, YUMI_KEYWORD + ' show aliases')) {
-                var user = message.from;
-
-                AliasService.getAllAliasesForUser(user).then(function(aliases) {
-                    var messageString = '';
-                    aliases.forEach(function(alias) {
-                        messageString = messageString + alias.aliasKey + ' -> ' + alias.planKey + '<br/>'
-                    })
-                    HipchatService.sendMessage(messageString);
-                });
-            }
+            CommandService.runCommand(message.from, message.message);
         }
     });
-}
-
-var queueBuildAndSendHipchatMessage = function(planKey) {
-    bamboo.queueBuild(planKey, function(error, response) {
-
-        if (error) {
-            console.log(error);
-        } else {
-            var resultUrl = 'https://' + config.bamboo.domain + '/browse/' + response.buildResultKey;
-            var messageString = 'Queuing build for plan ' + planKey + '. <a href=' + resultUrl + '>View status.</a>';
-            HipchatService.sendMessage(messageString);
-        }
-
-    });
-}
+};
 
 startYumi();
