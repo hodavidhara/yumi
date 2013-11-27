@@ -1,10 +1,13 @@
-var config = require('../config.json');
+var config = require('../config.json'),
+    StringUtil = require('../util/StringUtil.js');
 var dbUrl;
+
 if (StringUtil.startsWith(config.yumi.dbUrl, 'http://') || StringUtil.startsWith(config.yumi.dbUrl, 'https://')) {
     dbUrl = config.yumi.dbUrl;
 } else {
     dbUrl = 'https://' + config.yumi.dbUrl;
 }
+
 var nano = require('nano')(dbUrl),
     q = require('q');
 
