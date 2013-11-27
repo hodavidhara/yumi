@@ -4,7 +4,7 @@ var request = require('request'),
 var Bamboo = function(domain) {
     this.username = null;
     this.password = null;
-    if (StringUtil.startsWith(domain, 'http://') || StringUtil.startsWith('https://')) {
+    if (StringUtil.startsWith(domain, 'http://') || StringUtil.startsWith(domain, 'https://')) {
         this.domain = domain;
     }
     else {

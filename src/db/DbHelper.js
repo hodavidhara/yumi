@@ -1,5 +1,11 @@
-var config = require('../config.json'),
-    nano = require('nano')('http://' + config.yumi.dbUrl),
+var config = require('../config.json');
+var dbUrl;
+if (StringUtil.startsWith(config.yumi.dbUrl, 'http://') || StringUtil.startsWith(config.yumi.dbUrl, 'https://')) {
+    dbUrl = config.yumi.dbUrl;
+} else {
+    dbUrl = 'https://' + config.yumi.dbUrl;
+}
+var nano = require('nano')(dbUrl),
     q = require('q');
 
 var yumiDbName = 'yumi';
