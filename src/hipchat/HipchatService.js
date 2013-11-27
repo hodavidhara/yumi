@@ -28,7 +28,7 @@ HipchatService.prototype.sendMessage = function(message, callback) {
     });
 
     return messageSent.promise;
-}
+};
 
 HipchatService.prototype.sendPlainTextMessage = function(message, callback) {
     var messageSent = q.defer();

@@ -30,7 +30,7 @@ var startYumi = function() {
             poll();
         }
     });
-}
+};
 
 /**
  * Poll for messages and execute commands
@@ -42,7 +42,7 @@ var poll = function(fromDate) {
     var params = {
         room: config.hipchat.room,
         date: 'recent'
-    }
+    };
     hipchat.getHistory(params, function(response, error) {
         if (error) {
             console.log('ERROR: ' + error);
@@ -53,7 +53,7 @@ var poll = function(fromDate) {
         searchUnreadMessagesForCommand(unreadMessages);
         setTimeout(poll, 7000, mostRecentDate);
     });
-}
+};
 
 /**
  * Gets all messages from the given list that happened after the given date.
@@ -76,7 +76,7 @@ var getUnreadMessages = function(messages, lastDate) {
     });
 
     return unreadMessages;
-}
+};
 
 /**
  * Gets the date of the most recently posted message.
@@ -99,7 +99,7 @@ var getMostRecentDateFromMessages = function(messages) {
         }
     });
     return mostRecentDate;
-}
+};
 
 /**
  * Goes through the messages and checks the text for the yumi keyword, then executes the appropriate command to bamboo.
@@ -115,6 +115,6 @@ var searchUnreadMessagesForCommand = function(unreadMessages) {
             CommandService.runCommand(message.from, message.message);
         }
     });
-}
+};
 
 startYumi();
