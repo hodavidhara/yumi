@@ -144,6 +144,35 @@ CommandService.prototype.commands = [
         }
     },
     {
+        command: 'show queue',
+        args: '',
+        description: 'Show the current build queue - only shows builds that have not started',
+        run: function(user, args) {
+
+            bamboo.getBuildQueue(function(error, builds) {
+
+                if (error) {
+                    console.log(error);
+                    HipchatService.sendErrorMessage('Uh oh. Something went wrong. :(');
+                    return;
+                }
+
+                console.log("Builds: ", builds);
+
+                var messageString = 'Currently queued builds: <br/>';
+                if(builds.length === 0) {
+                    messageString = " No builds in progress or in the queue";
+                }
+                else {
+                    builds.forEach(function(build) {
+                        messageString = messageString + "<a href=''"+ build.link.href + "'>" + build.planKey + '</a> (' + build.triggerReason + ')<br/>';
+                    });
+                }
+                HipchatService.sendMessage(messageString);
+            });
+        }
+    },
+    {
         command: 'celebrate!',
         args: '',
         description: 'Awwww yeah!',
