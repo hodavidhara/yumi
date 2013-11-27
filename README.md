@@ -1,4 +1,4 @@
-Yumi
+Yumi [![Build Status](https://travis-ci.org/[hodavidhara]/[yumi].png)](https://travis-ci.org/[hodavidhara]/[yumi])
 ===
 
 Send commands to bamboo from Hipchat
