@@ -85,7 +85,7 @@ AliasService.prototype.getPlanKeyForAlias = function(user, aliasKey, callback) {
         });
 
         // no matching alias found
-        planKey.reject("No matching alias found.");
+        planKeyFound.reject("No matching alias found.");
         if (callback) {
             callback("No matching alias found.");
         }

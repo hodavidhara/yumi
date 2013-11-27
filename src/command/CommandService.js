@@ -35,14 +35,19 @@ CommandService.prototype.commands = [
 
                 if (error) {
                     console.log(error);
+                    HipchatService.sendErrorMessage('Uh oh. Something went wrong. :(');
                     return;
                 }
 
-                var messageString = '';
-                plans.forEach(function(plan) {
-                    messageString = messageString + plan.name + ' (' + plan.key + ')<br/>';
-                });
-                HipchatService.sendMessage(messageString);
+                if (!plans || plans.length === 0) {
+                    HipchatService.sendMessage('No plans found in project: <strong>' + config.bamboo.project + '</strong>')
+                } else {
+                    var messageString = '';
+                    plans.forEach(function(plan) {
+                        messageString = messageString + plan.name + ' (' + plan.key + ')<br/>';
+                    });
+                    HipchatService.sendMessage(messageString);
+                }
             });
         }
     },
@@ -68,7 +73,7 @@ CommandService.prototype.commands = [
             var planKey = args[0];
 
             if (!planKey) {
-                HipchatService.sendMessage('No plan key given.');
+                HipchatService.sendErrorMessage('No plan key given.');
                 return;
             }
 
@@ -78,6 +83,7 @@ CommandService.prototype.commands = [
 
                 if (error) {
                     console.log(error);
+                    HipchatService.sendErrorMessage('Uh oh. Something went wrong. :(');
                     return;
                 }
 
@@ -105,10 +111,14 @@ CommandService.prototype.commands = [
 
                 if (planKey && aliasKey) {
 
-                    AliasService.createAlias(user, planKey, aliasKey).then(function(response) {
-                        var messageString = 'Aliased ' + planKey + ' to ' + aliasKey + ' for ' + user.name;
-                        HipchatService.sendMessage(messageString);
-                    });
+                    AliasService.createAlias(user, planKey, aliasKey)
+                        .then(function(response) {
+                            var messageString = 'Aliased ' + planKey + ' to ' + aliasKey + ' for ' + user.name;
+                            HipchatService.sendMessage(messageString);
+                        }).fail(function(error) {
+                            console.log(error);
+                            HipchatService.sendErrorMessage('Uh oh. Something went wrong. :(');
+                        });
                 }
             }
         }
@@ -119,13 +129,18 @@ CommandService.prototype.commands = [
         description: 'Lists your personal aliases.',
         run: function(user, args) {
 
-            AliasService.getAllAliasesForUser(user).then(function(aliases) {
-                var messageString = '';
-                aliases.forEach(function(alias) {
-                    messageString = messageString + alias.aliasKey + ' -> ' + alias.planKey + '<br/>'
+            AliasService.getAllAliasesForUser(user)
+                .then(function(aliases) {
+                    var messageString = '';
+                    aliases.forEach(function(alias) {
+                        messageString = messageString + alias.aliasKey + ' -> ' + alias.planKey + '<br/>'
+                    });
+                    HipchatService.sendMessage(messageString);
+                })
+                .fail(function(error) {
+                    console.log(error);
+                    HipchatService.sendErrorMessage('Uh oh. Something went wrong. :(');
                 });
-                HipchatService.sendMessage(messageString);
-            });
         }
     },
     {
