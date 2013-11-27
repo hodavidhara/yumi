@@ -169,6 +169,26 @@ Bamboo.prototype.queueBuild = function(planKey, callback) {
     }).auth(this.username, this.password);
 };
 
+/**
+ * Get the current build queue
+ * @param callback
+ */
+Bamboo.prototype.getBuildQueue = function(callback) {
+    var uri = this.domain + '/rest/api/latest/queue.json?expand=queuedBuilds';
+
+    request.get(uri, function(error, response, body) {
+        _handleErrors(error, response, callback);
+
+        var parsedBody = JSON.parse(body);
+        console.log(parsedBody);
+
+        if(callback) {
+            console.log("Calling callback");
+            callback(null, parsedBody.queuedBuilds.queuedBuild);
+        }
+    }).auth(this.username, this.password);
+}
+
 var _handleErrors = function(error, response, callback) {
     if (error) {
         if (callback) {
