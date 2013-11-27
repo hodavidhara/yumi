@@ -1,15 +1,15 @@
 {
-  "yumi": {
-    "dbUrl": ""
-  },
-  "bamboo": {
-    "domain": "",
-    "username": "",
-    "password": "",
-    "project": ""
-  },
-  "hipchat": {
-    "apiKey": "",
-    "room": ""
-  }
+    "yumi": {
+        "dbUrl": ""
+    },
+    "bamboo": {
+        "domain": "",
+        "username": "",
+        "password": "",
+        "project": ""
+    },
+    "hipchat": {
+        "apiKey": "",
+        "room": ""
+    }
 }
