@@ -19,5 +19,8 @@
     "devDependencies": {
         "mocha": "*",
         "chai": "*"
+    },
+    "scripts": {
+        "test": "mocha src/test/**/*.js"
     }
 }
